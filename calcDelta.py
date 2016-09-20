@@ -94,9 +94,9 @@ def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
 
     incang = np.arcsin(sini)
     Omgang = paascnode/180.*np.pi
-    A = -1./np.tan(incang)
+    A = 2. * np.sin(Omgang) / np.tan(incang)
     B = -1./np.tan(Omgang)
-    C = 1.
+    C = -1.
 
     n_orb = np.matrix((A, B, C)).T
     n_orb= n_orb/linalg.norm(n_orb)

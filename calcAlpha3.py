@@ -104,9 +104,9 @@ def EdotF(f0, x, px, sini, paascnode, Pb, PMRA, PMDEC, omdot_GR, e1, e2, e1dot, 
 
     incang = np.arcsin(sini)
     Omgang = paascnode/180.*np.pi
-    A = -1./np.tan(incang)
+    A = 2. * np.sin(Omgang) / np.tan(incang)
     B = -1./np.tan(Omgang)
-    C = 1.
+    C = -1.
 
     #C_psr = 0.21*m1 #compactness
     C_psr = 0.11 * 2 #compactness = sensitivity x 2

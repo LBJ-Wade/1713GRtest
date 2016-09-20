@@ -119,7 +119,10 @@ if __name__ == '__main__':
     Dec = pos1713.dec.rad
     DRA = pos1713.ra.rad - GCpos.ra.rad
     DDec = pos1713.dec.rad - GCpos.dec.rad
-    Omega = float(pf.PAASCNODE)/180.*np.pi
+    if 'PAASCNODE' in pf.__dict__:
+        Omega = float(pf.PAASCNODE)/180.*np.pi
+    else:
+        Omega = float(pf.KOM[0])/180.*np.pi
     Theta_g = np.pi - np.arctan(np.tan(DRA)/np.sin(DDec))
 
     T, GT = GetTransferMatrix(pf)
@@ -168,13 +171,19 @@ if __name__ == '__main__':
     print 'g_NSEW:', g_NSEW.T
     """
     #figure out the orbital plane
-    #define orbital plane as Ax + By + Cz = 0; where A = -1./tg(i), B = -1./tg(Omega), C = 1.
+    #define orbital plane as Ax + By + Cz = 0; where A = 2.*sin(Omega)/tg(i), B = -1./tg(Omega), C = -1.
     """
-    incang = np.arcsin(float(pf.SINI[0]))
-    Omgang = float(pf.PAASCNODE)/180.*np.pi
-    A = -1./np.tan(incang)
+    if pf.SINI == 'KIN':
+        incang = float(pf.KIN[0])/180.*np.pi
+    else:
+        incang = np.arcsin(float(pf.SINI[0]))
+    if 'PAASCNODE' in pf.__dict__:
+        Omgang = float(pf.PAASCNODE)/180.*np.pi
+    else:
+        Omgang = float(pf.KOM[0])/180.*np.pi
+    A = 2. * np.sin(Omgang) / np.tan(incang)
     B = -1./np.tan(Omgang)
-    C = 1.
+    C = -1.
 
     n_orb = np.matrix((A, B, C)).T
     n_orb= n_orb/linalg.norm(n_orb)
@@ -202,7 +211,7 @@ if __name__ == '__main__':
     import numpy as np
     import matplotlib.pyplot as plt
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection='3d', aspect='equal')
 
     Xstar = np.matrix((3, 0, 0)).T
     Ystar = np.matrix((0, 3, 0)).T
@@ -226,7 +235,7 @@ if __name__ == '__main__':
     z = np.sin(gb) * D
     PeriAng = float(pf.OM[0])
     Ang = PeriAng + gl*180./np.pi
-    e = Ellipse(xy = [x,y], width=(0.9), height=0.5, angle=Ang, fill=True, lw=1)
+    e = Ellipse(xy = [x,y], width=(1.5), height=1.5, angle=Ang, fill=True, lw=1)
     #ax.add_artist(ell)
     #p = PatchCollection([e])
     #ax.add_collection3d(p, zs=[0])
@@ -265,9 +274,8 @@ if __name__ == '__main__':
     ax.add_artist(AZ)
 
     Gg = GT*g/KG*5
-    GA = Arrow3D([x,x+Gg[1]], [y,y-Gg[0]], [z,z+Gg[2]], mutation_scale=20, lw=1, arrowstyle="-|>", color="m")
-
-    ax.add_artist(GA)
+    #GA = Arrow3D([x,x+Gg[1]], [y,y-Gg[0]], [z,z+Gg[2]], mutation_scale=20, lw=1, arrowstyle="-|>", color="m")
+    #ax.add_artist(GA)
 
 
     N_ORB = GT * T.I * n_orb * 4

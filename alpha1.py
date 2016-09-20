@@ -31,11 +31,13 @@ G = const.G.cgs.value
 """
 Shao and Wex 2012
 """
-alpha_1 = -3e-4 # 0.4^{+3.7}_{-3.1}e-5
+alpha_1 = -4e-5 # 0.4^{+3.7}_{-3.1}e-5
 alpha_2 = 1.8e-4 # 95% confidence limit
 
 
 psr = model('1713.cut.par')
+
+T, GT = GetTransferMatrix(psr)
 
 m1 = float(M1(psr))
 m2 = float(psr.M2[0])
@@ -67,3 +69,33 @@ w = 1000.e5
 print 'assuming a speed of 1000km/s', w
 edot_est = alpha_2 * nb * Fe * w**2 * ecc / c**2
 print edot_est
+
+
+wserr = 0.9e5 #Kogut et al. 1993, Fixsen et al 1996, Hinshaw et al. 2009
+wsolar = 369.e5 + np.random.randn()*wserr#See ref below (aaa+13 Planck Team: Aghanim, N. et al. 2013. Planck confirms this using a different method)
+lws, bws = 263.99/180.*np.pi, 48.26/180.*np.pi
+w_s = wsolar * (GT.I * np.matrix((np.cos(bws)*np.cos(lws),np.cos(bws)*np.sin(lws),np.sin(bws))).T)
+ws_NSEW = T * w_s
+
+#px = float(psr.PX[0])
+#D = kpc/px
+#PMRA = float(psr.PMRA)
+#PMDEC = float(psr.PMDEC)
+#wx = w * (np.matrix((-1., 0., 0.)).T)
+#wy = PMRA*1.e-3/60./60.*np.pi/180./secperyear * D * (np.matrix((0.,-1.,0.)).T)
+#wz = PMDEC*1.e-3/60./60.*np.pi/180./secperyear * D * (np.matrix((0.,0.,1.)).T)
+#w_ns = (wx + wy + wz)
+#w =  w_ns + ws_NSEW
+
+incang = float(psr.KIN[0])/180.*np.pi
+Omgang = float(psr.KOM[0])/180.*np.pi
+A = 2. * np.sin(Omgang) / np.tan(incang)
+B = -1./np.tan(Omgang)
+C = -1.
+
+n_orb = np.matrix((A, B, C)).T
+n_orb= n_orb/linalg.norm(n_orb)
+print 'n_orb:', [ x for x in n_orb]
+print 'w_NSEW:', [x for x in ws_NSEW]
+
+print 'n_orb cross w_solar:', np.cross( n_orb.T, ws_NSEW.T)
