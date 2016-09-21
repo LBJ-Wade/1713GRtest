@@ -31,9 +31,10 @@ G = const.G.cgs.value
 """
 Shao and Wex 2012
 """
-alpha_1 = -4e-5 # 0.4^{+3.7}_{-3.1}e-5
+alpha_1 = 1.7e-5 # 0.4^{+3.7}_{-3.1}e-5
 alpha_2 = 1.8e-4 # 95% confidence limit
-
+alpha_3 = 1.e-21 # benchmark
+s_p = 0.11
 
 psr = model('1713.cut.par')
 
@@ -43,6 +44,7 @@ m1 = float(M1(psr))
 m2 = float(psr.M2[0])
 pb = float(psr.PB[0]) * secperday
 ecc = np.sqrt(float(psr.EPS1[0])**2 + float(psr.EPS2[0])**2)
+spin = float(psr.F0[0]) * 2 * PI
 
 q = m1/m2
 
@@ -65,7 +67,8 @@ print 'assuming a speed of 1000km/s', w
 edot_est = alpha_1 * (q-1)/(q+1) / 4 / c**2 * nb * VO * w
 print edot_est
 
-w = 1000.e5
+#w = 1000.e5
+w = -1000.e5
 print 'assuming a speed of 1000km/s', w
 edot_est = alpha_2 * nb * Fe * w**2 * ecc / c**2
 print edot_est
@@ -77,15 +80,15 @@ lws, bws = 263.99/180.*np.pi, 48.26/180.*np.pi
 w_s = wsolar * (GT.I * np.matrix((np.cos(bws)*np.cos(lws),np.cos(bws)*np.sin(lws),np.sin(bws))).T)
 ws_NSEW = T * w_s
 
-#px = float(psr.PX[0])
-#D = kpc/px
-#PMRA = float(psr.PMRA)
-#PMDEC = float(psr.PMDEC)
-#wx = w * (np.matrix((-1., 0., 0.)).T)
-#wy = PMRA*1.e-3/60./60.*np.pi/180./secperyear * D * (np.matrix((0.,-1.,0.)).T)
-#wz = PMDEC*1.e-3/60./60.*np.pi/180./secperyear * D * (np.matrix((0.,0.,1.)).T)
-#w_ns = (wx + wy + wz)
-#w =  w_ns + ws_NSEW
+px = float(psr.PX[0])
+D = kpc/px
+PMRA = float(psr.PMRA[0])
+PMDEC = float(psr.PMDEC[0])
+wx = w * (np.matrix((-1., 0., 0.)).T)
+wy = PMRA*1.e-3/60./60.*np.pi/180./secperyear * D * (np.matrix((0.,-1.,0.)).T)
+wz = PMDEC*1.e-3/60./60.*np.pi/180./secperyear * D * (np.matrix((0.,0.,1.)).T)
+w_ns = (wx + wy + wz)
+w =  w_ns + ws_NSEW
 
 incang = float(psr.KIN[0])/180.*np.pi
 Omgang = float(psr.KOM[0])/180.*np.pi
@@ -94,8 +97,22 @@ B = -1./np.tan(Omgang)
 C = -1.
 
 n_orb = np.matrix((A, B, C)).T
-n_orb= n_orb/linalg.norm(n_orb)
-print 'n_orb:', [ x for x in n_orb]
-print 'w_NSEW:', [x for x in ws_NSEW]
+n_orb = n_orb/linalg.norm(n_orb)
+print 'n_orb:', [x for x in n_orb]
+print 'w_solar:', [x for x in ws_NSEW]
+print 'w_psr:', [x for x in w_ns]
+print 'w = w_psr + w_solar:', w.flatten()
+print 'w - (w dot n_orb)*n_orb:', (w - n_orb * (n_orb.T * w)).flatten()
 
-print 'n_orb cross w_solar:', np.cross( n_orb.T, ws_NSEW.T)
+w_orb = w - n_orb * (n_orb.T * w)
+edot_a1 = alpha_1 / 4. / c**2  * (m1-m2)/(m1+m2) * nb * VO * w_orb
+edot_a3 = alpha_3 * PI * s_p * spin / VO * w_orb
+#print edot_a1, edot_a3
+
+e_x = np.matrix((0., -1.*np.sin(Omgang), np.cos(Omgang))).T
+e_y = np.matrix(np.cross(np.array(n_orb).flatten(), np.array(e_x).flatten())).T
+
+print 'e_x_dir, e_y_dir', e_x.flatten(), e_y.flatten()
+print 'edot_a1:', 'EPSDOT1', edot_a1.T * e_x , 'EPSDOT2', edot_a1.T * e_y
+print 'edot_a3:', 'EPSDOT1',edot_a3.T * e_x , 'EPSDOT2', edot_a3.T * e_y
+
