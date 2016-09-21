@@ -89,7 +89,7 @@ ws_NSEW = T * w_s
 
 incang = float(psr.KIN[0])/180.*np.pi
 Omgang = float(psr.KOM[0])/180.*np.pi
-A = 2. * np.sin(Omgang) / np.tan(incang)
+A = 1. / np.sin(Omgang) / np.tan(incang)
 B = -1./np.tan(Omgang)
 C = -1.
 

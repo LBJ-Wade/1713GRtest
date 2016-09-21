@@ -107,7 +107,7 @@ def Pintegrant(M1, M2, PB, F0, ECC, PMRA, PMDEC, PX, SINI, PAASCNODE, OM, w):
     #A = -1./np.tan(incang)
     #B = -1./np.tan(Omgang)
     #C = 1.
-    A = 2. * np.sin(Omgang) / np.tan(incang)
+    A = 1. / np.sin(Omgang) / np.tan(incang)
     B = -1./np.tan(Omgang)
     C = -1.
     A_ref = np.matrix((0, -1.* np.sin(Omgang), np.cos(Omgang)))

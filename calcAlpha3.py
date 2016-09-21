@@ -104,7 +104,7 @@ def EdotF(f0, x, px, sini, paascnode, Pb, PMRA, PMDEC, omdot_GR, e1, e2, e1dot, 
 
     incang = np.arcsin(sini)
     Omgang = paascnode/180.*np.pi
-    A = 2. * np.sin(Omgang) / np.tan(incang)
+    A = 1. / np.sin(Omgang) / np.tan(incang)
     B = -1./np.tan(Omgang)
     C = -1.
 

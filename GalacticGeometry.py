@@ -171,7 +171,7 @@ if __name__ == '__main__':
     print 'g_NSEW:', g_NSEW.T
     """
     #figure out the orbital plane
-    #define orbital plane as Ax + By + Cz = 0; where A = 2.*sin(Omega)/tg(i), B = -1./tg(Omega), C = -1.
+    #define orbital plane as Ax + By + Cz = 0; where A = 1./sin(Omega)/tg(i), B = -1./tg(Omega), C = -1.
     """
     if pf.SINI == 'KIN':
         incang = float(pf.KIN[0])/180.*np.pi
@@ -181,7 +181,7 @@ if __name__ == '__main__':
         Omgang = float(pf.PAASCNODE)/180.*np.pi
     else:
         Omgang = float(pf.KOM[0])/180.*np.pi
-    A = 2. * np.sin(Omgang) / np.tan(incang)
+    A = 1. / np.sin(Omgang) / np.tan(incang)
     B = -1./np.tan(Omgang)
     C = -1.
 
@@ -261,8 +261,8 @@ if __name__ == '__main__':
     #ax.set_xlim((-4.0,6.8))
     #ax.set_ylim((-0.2,10.6))
     #ax.set_zlim(-1.,1.)
-    ax.set_xlim((-11.,11.))
-    ax.set_ylim((-11,11.))
+    ax.set_xlim(-11.,11.)
+    ax.set_ylim(-11.,11.)
     ax.set_zlim(-11.,11.)
 
     AX = Arrow3D([x,x+GX[1]], [y,y-GX[0]], [z,z+GX[2]], mutation_scale=20, lw=1, arrowstyle="-|>", color="r")
