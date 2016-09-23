@@ -67,6 +67,7 @@ elif pf.__dict__['BINARY'] in ['ELL1', 'ELL1+', 'T2+']:
     e1 = float(pf.EPS1[0])
     e2 = float(pf.EPS2[0])
     er1 = pf.EPS1[1]/pf.EPS1[0]
+#tick.set_visible(False)
     er2 = pf.EPS2[1]/pf.EPS2[0]
     er = np.sqrt(float(er1**2 + er2**2))
     OM = np.arctan2(e1,e2)*180./np.pi % 360
@@ -86,6 +87,7 @@ T, GT = GetTransferMatrix(pf)#, paascnode)
 def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
     """calculate delta using e1dot and e2dot
     """
+    global edot_diff
 
     g_r = GT.I * kr * ( np.matrix((np.cos(0.-zeta),np.sin(0.-zeta),0)).T) #X/linalg.norm(X)
     g_z = GT.I * Kz(z) * (np.matrix((0., 0., -1.)).T) 
@@ -118,7 +120,8 @@ def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
     g_frc = np.cross(g_proj, n_orb)
     g_frc_norm = linalg.norm(g_frc)
     g_frc_dir = g_frc/g_frc_norm
-    edot_obs = e1dot * B_ref + e2dot * A_ref
+    #edot_obs = e1dot * B_ref + e2dot * A_ref
+    edot_obs = e1dot * B_ref + e2dot * A_ref - edot_diff #cancel the tention of 2 sigma
     #e_dir = np.cos(om/180.*np.pi)*A_ref + np.sin(om/180.*np.pi)*B_ref #direction of the eccentrcity e
     e_arr = e1 * B_ref + e2 * A_ref #e1 is the e*sin(omega) part and e2 is the e*cos(omege) part
     edot_GR = omdot_GR * np.cross(n_orb, e_arr)
@@ -269,21 +272,22 @@ M1 = PB/2/pi*(np.sqrt(Tsun*(M2*SINI)**3/a**3))-M2
 #print 'EPS2DOT:', E2DOT.mean() , E2DOT.std()
 #print 'parfile:', vals0[plist.index('EPS2DOT')], errs0[plist.index('EPS2DOT')]
 
-#OMDOT_GR = 3.*(2*np.pi/PB)**(5./3)*(Tsun*(M1+M2))**(2./3)/(1. - ECC**2)
-#incang = np.arcsin(SINI.mean())
-#Omgang = PAASCNODE.mean()/180.*np.pi
-#A = -1./np.tan(incang)
-#B = -1./np.tan(Omgang)
-#C = 1.
-#n_orb = np.array((A, B, C))
-#n_orb= n_orb/linalg.norm(n_orb)
-#A_ref = np.array((0, -1.* np.sin(Omgang), np.cos(Omgang))) #direction of the accending node, e2, and e2dot
-#B_ref = np.cross(n_orb, A_ref) #direction of e1, e1dot
-#e1, e2 = E1.mean(), E2.mean()
-#e1dot, e2dot = E1DOT.mean(), E2DOT.mean()
-#edot_obs = e1dot*B_ref + e2dot*A_ref
-#e_arr = e1 * B_ref + e2 * A_ref #e1 is the e*sin(omega) part and e2 is the e*cos(omege) part
-#edot_GR = OMDOT_GR.mean() * np.cross(n_orb, e_arr)
+OMDOT_GR = 3.*(2*np.pi/PB)**(5./3)*(Tsun*(M1+M2))**(2./3)/(1. - ECC**2)
+incang = np.arcsin(SINI.mean())
+Omgang = PAASCNODE.mean()/180.*np.pi
+A = 1. / np.sin(Omgang) / np.tan(incang)
+B = -1./np.tan(Omgang)
+C = -1.
+n_orb = np.array((A, B, C))
+n_orb= n_orb/linalg.norm(n_orb)
+A_ref = np.array((0, -1.* np.sin(Omgang), np.cos(Omgang))) #direction of the accending node, e2, and e2dot
+B_ref = np.cross(n_orb, A_ref) #direction of e1, e1dot
+e1, e2 = E1.mean(), E2.mean()
+e1dot, e2dot = E1DOT.mean(), E2DOT.mean()
+edot_obs = e1dot*B_ref + e2dot*A_ref
+e_arr = e1 * B_ref + e2 * A_ref #e1 is the e*sin(omega) part and e2 is the e*cos(omege) part
+edot_GR = OMDOT_GR.mean() * np.cross(n_orb, e_arr)
+edot_diff = edot_obs - edot_GR
 #edot = edot_obs - edot_GR
 #print 'edot_obs:', edot_obs, 'edot_GR:', edot_GR, 'edot_exc:', edot
 

@@ -13,7 +13,6 @@ import numpy.linalg as linalg
 from GalacticGeometry import *
 
 import libstempo 
-from threadit import spamit
 
 #from Arrow3D import Arrow3D
 secperday = 24*3600
@@ -84,12 +83,10 @@ def Kz(z):
 """Calculate the coordinate transfermation matrix"""
 T, GT = GetTransferMatrix(pf)#, paascnode)
 
-def EdotF(f0, x, px, sini, paascnode, Pb, PMRA, PMDEC, omdot_GR, e1, e2, e1dot, e2dot, m1, m2, w, alpha_1):
+def EdotF(f0, x, px, sini, paascnode, Pb, PMRA, PMDEC, omdot_GR, e1, e2, e1dot, e2dot, m1, m2, w ):
     """calculate delta using e1dot and e2dot
     """
     Mtot = m1 + m2
-    nb = 2. * np.pi / Pb
-    VO = (G * (m1+m2) * Msun * nb) ** (1./3.)
 
     wserr = 0.9e5 #Kogut et al. 1993, Fixsen et al 1996, Hinshaw et al. 2009
     wsolar = 369.e5 + np.random.randn()*wserr#See ref below (aaa+13 Planck Team: Aghanim, N. et al. 2013. Planck confirms this using a different method)
@@ -112,18 +109,15 @@ def EdotF(f0, x, px, sini, paascnode, Pb, PMRA, PMDEC, omdot_GR, e1, e2, e1dot, 
     C = -1.
 
     #C_psr = 0.21*m1 #compactness
-    #C_psr = 0.11 * 2 #compactness = sensitivity x 2
-    s_p = 0.1
+    C_psr = 0.11 * 2 #compactness = sensitivity x 2
 
     n_orb = np.matrix((A, B, C)).T
     n_orb= n_orb/linalg.norm(n_orb)
     #print 'n_orb', n_orb.T
-    #w_proj = w - n_orb * (w.T*n_orb) 
-    w_orb = w - n_orb * (n_orb.T * w)
+    w_proj = w - n_orb * (w.T*n_orb) 
     #w_proj = w - n_orb * np.dot(w,n_orb) 
-    w_leg = linalg.norm(w_orb)
-    #w_dir = w_proj/w_leg
-    w_dir = w_orb/w_leg
+    w_leg = linalg.norm(w_proj)
+    w_dir = w_proj/w_leg
     n_orb = np.array((A, B, C))
     n_orb= n_orb/linalg.norm(n_orb)
 
@@ -136,30 +130,44 @@ def EdotF(f0, x, px, sini, paascnode, Pb, PMRA, PMDEC, omdot_GR, e1, e2, e1dot, 
     e_arr = e1 * B_ref + e2 * A_ref #e1 is the e*sin(omega) part and e2 is the e*cos(omege) part
     ecc = linalg.norm(e_arr)
     edot_GR = omdot_GR * np.cross(n_orb, e_arr)
+    edot = edot_obs - edot_GR
 
-    edot_a1 = alpha_1 / 4. / c**2  * (m1-m2)/(m1+m2) * nb * VO * w_orb
-
-    edot = edot_obs - edot_GR - edot_a1
-
-    #edot_a3 = alpha_3 * np.pi * s_p * f0 / VO * w_orb
-
-    w_frc = -1. * np.pi * s_p * f0 / VO * w_orb
-    #w_frc = 0.25 * C_psr * f0 * Pb * np.cross(np.cross(w_proj, n_orb), n_orb) * np.sqrt(1. - ecc**2) * sini / x / c
+    w_proj = np.array(w_proj.T)[0]
+    #print 'f0', f0, 'Pb', Pb, 'w_proj', w_proj, 'n_orb', n_orb, e, sini, x
+    w_frc = 0.25 * C_psr * f0 * Pb * np.cross(np.cross(w_proj, n_orb), n_orb) * np.sqrt(1. - ecc**2) * sini / x / c
+    #w_frc = 0.25 * s_p * f0 * Pb * np.cross(np.cross(w_proj, n_orb), n_orb) * np.sqrt(1. - ecc**2) * sini / x / c
     w_frc_norm = linalg.norm(w_frc)
     w_frc_dir = w_frc/w_frc_norm
+    #w_ang = np.arccos(A_ref * w_dir)
+    #print 'n_orb', n_orb, 'A_ref', A_ref, 'g_proj', g_proj
 
-    return  (np.dot(edot, w_frc_dir)/w_frc_norm)[0][0] #return edot/w_{_|_}
+    #print 'edot', edot, 'w_frc', w_frc
+    return  np.dot(edot, w_frc_dir)/w_frc_norm #return edot/w_{_|_}
 
 
-def calcalpha3(F0, A1, PX,  SINI, PAASCNODE, PMRA, PMDEC, M1, M2, PB, ECC, OM, E1DOT, E2DOT, Wr, alpha_1):
+def calcalpha3(F0, A1, PX,  SINI, PAASCNODE, PMRA, PMDEC, M1, M2, PB, ECC, OM, E1DOT, E2DOT, Wr):
     VI = np.arange(M1.size)[np.logical_and(M1 > 1.0, M1 < 2.5)] #valid indices
+    #print 'validindices', VI
+
+    #D = 1./PX
+    #Omega = PAASCNODE/180.*np.pi
+    #z = np.sin(gb) * D
+    #R1 = np.sqrt(R0**2 + (D*np.cos(gb))**2 -2 * R0 * D * np.cos(gb) * np.cos(gl))
+    #coszeta = (R0**2 + R1**2 - D**2 + z**2)/R0/R1/2.
+    #zeta = np.arccos(coszeta)
+
+    #Mtot =  M1 + M2
+    #Omega_G = 30.57 #km s^-1 kpc^-1 +/- 5.1 Ref: Reid et al. 2014 (rmb+14)
+    #kpcinkm = 3.0857e16
+    #Kr =  Omega_G**2 * R0**2 / R1 / kpcinkm * 1.e5 #Galactic acceleration in radio direction (cm/s^2)
 
     OMDOT_GR = 3.*(2*np.pi/PB)**(5./3)*(Tsun*(M1+M2))**(2./3)/(1. - ECC**2)
+    #print 'Galactic acceleration in radio direction in cm/s^2', Kr
 
     alpha3 = []
     for i,sini in enumerate(SINI):
         #print 'i, z[i]', i, z[i], gb, D[i]
-        edforce = EdotF(F0, A1[i], PX[i], sini, PAASCNODE[i], PB[i], PMRA, PMDEC, OMDOT_GR[i], E1[i], E2[i], E1DOT[i], E2DOT[i], M1[i], M2[i], Wr, alpha_1[i])
+        edforce = EdotF(F0, A1[i], PX[i], sini, PAASCNODE[i], PB[i], PMRA, PMDEC, OMDOT_GR[i], E1[i], E2[i], E1DOT[i], E2DOT[i], M1[i], M2[i], Wr)
         #edforce = EdotF(F0[i], A1[i], PX[i], sini, PAASCNODE[i], PB[i], OMDOT_GR[i], E1[i], E2[i], E1DOT[i], E2DOT[i], M1[i], M2[i], Wr)
         alpha3.append(edforce)
 
@@ -290,23 +298,13 @@ M1 = PB/2/pi*(np.sqrt(Tsun*(M2*SINI)**3/a**3))-M2
 #edot = edot_obs - edot_GR
 #print 'edot_obs:', edot_obs, 'edot_GR:', edot_GR, 'edot_exc:', edot
 
-#alpha_1 = 1.7e-5 # 0.4^{+3.7}_{-3.1}e-5
-alpha_1 = np.random.randn(SINI.size) * 1.7e-5 + 0.4e-5
-
 Wr = np.linspace(-3000.e5, 3000.e5, num=100)
 X = []
 Y = []
-def calc(w):
-    return  calcalpha3(F0, a, PX, SINI, PAASCNODE, PMRA, PMDEC, M1, M2, PB, ECC, OM, E1DOT, E2DOT, w, alpha_1).flatten()
-
-
-#print calc(0.).shape
-#sys.exit(0)
-
-X = spamit(calc, [[w] for w in Wr])
-
 for w in Wr:
-    Y.append(w*np.ones(X[0].size))
+    alpha3 = calcalpha3(F0, a, PX, SINI, PAASCNODE, PMRA, PMDEC, M1, M2, PB, ECC, OM, E1DOT, E2DOT, w)
+    X.append(alpha3)
+    Y.append(w*np.ones(alpha3.size))
 x = np.hstack(X).astype(float)
 y = np.hstack(Y).astype(float)
 hist2d(x, y, bins=10)
@@ -317,7 +315,7 @@ ylabel(r'$v_r$ (cm/s)')
 show()
 
 print x.shape, y.shape
-np.savez('alpha3_alpha1', Wr=Wr, Alpha3=X)
+np.savez('alpha3_result', Wr=Wr, Alpha3=X)
 
 #alpha3 = calcalpha3(F0, a, PX, SINI, PAASCNODE, PMRA, PMDEC, M1, M2, PB, ECC, OM, E1DOT, E2DOT, 0)
 #hist(alpha3)

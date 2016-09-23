@@ -34,7 +34,7 @@ Shao and Wex 2012
 alpha_1 = 1.7e-5 # 0.4^{+3.7}_{-3.1}e-5
 alpha_2 = 1.8e-4 # 95% confidence limit
 alpha_3 = 1.e-21 # benchmark
-s_p = 0.11
+s_p = 0.1
 
 psr = model('1713.cut.par')
 
@@ -44,7 +44,7 @@ m1 = float(M1(psr))
 m2 = float(psr.M2[0])
 pb = float(psr.PB[0]) * secperday
 ecc = np.sqrt(float(psr.EPS1[0])**2 + float(psr.EPS2[0])**2)
-spin = float(psr.F0[0]) * 2 * PI
+spin = float(psr.F0[0]) 
 
 q = m1/m2
 
@@ -58,20 +58,10 @@ print 'omdot_GR:', omdot_GR * secperyear * 57.2958
 Fe = 1./(1. + np.sqrt(1-ecc**2))
 
 VO = (G * (m1+m2) * Msun * nb) ** (1./3.)
-
 print 'VO:', VO
-
-w = 1000.e5
-print 'assuming a speed of 1000km/s', w
-
-edot_est = alpha_1 * (q-1)/(q+1) / 4 / c**2 * nb * VO * w
-print edot_est
 
 #w = 1000.e5
 w = -1000.e5
-print 'assuming a speed of 1000km/s', w
-edot_est = alpha_2 * nb * Fe * w**2 * ecc / c**2
-print edot_est
 
 
 wserr = 0.9e5 #Kogut et al. 1993, Fixsen et al 1996, Hinshaw et al. 2009
