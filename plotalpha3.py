@@ -23,6 +23,8 @@ wy = PMRA*1.e-3/60./60.*np.pi/180./secperyear * D
 wz = PMDEC*1.e-3/60./60.*np.pi/180./secperyear * D 
 wpm = np.sqrt(wy**2 + wz**2)
 
+w_escape = (-0.7, 0.5)
+
 def plotdata(filename, color='k'):
 
     data = np.load(filename)
@@ -66,19 +68,23 @@ def plotdata(filename, color='k'):
     print '95% limits:', normbk1[:,0].min(), normbk1[:,1].max()
     #print wpm/1.e8
 
-    plot(normbk1[:,0]/1.e-21, Wr/1.e8, '-', linewidth=2, color=color)
-    plot(normbk1[:,1]/1.e-21, Wr/1.e8, '-', linewidth=2, color=color)
-    plot(normbk2[:,0]/1.e-21, Wr/1.e8, '--', linewidth=2, color=color)
-    plot(normbk2[:,1]/1.e-21, Wr/1.e8, '--', linewidth=2, color=color)
+    plot(normbk1[:,0]/1.e-20, Wr/1.e8, '-', linewidth=2, color=color)
+    plot(normbk1[:,1]/1.e-20, Wr/1.e8, '-', linewidth=2, color=color)
+    plot(normbk2[:,0]/1.e-20, Wr/1.e8, '--', linewidth=2, color=color)
+    plot(normbk2[:,1]/1.e-20, Wr/1.e8, '--', linewidth=2, color=color)
     #plt.axhline(y=wpm/1.e8, linewidth=2)
     #plt.axhline(y=wpm/-1.e8, linewidth=2)
+
 
 
 
 plotdata('alpha3_only.npz', color='k')
 plotdata('alpha3_alpha1.npz', color='r')
 
+axhline(w_escape[0], linestyle='-', color='k', linewidth=2)
+axhline(w_escape[1], linestyle='-', color='k', linewidth=2)
 
-xlabel(r"$\^{\alpha}_3 $ $(10^{-21})$")
-ylabel(r'$v_r$ ($10^{8}$cm/s)')
+ylim(-3,3)
+xlabel(r"$\^{\alpha}_3 $ $(10^{-20})$")
+ylabel(r'$v_r$ ($10^{3}$km/s)')
 show()

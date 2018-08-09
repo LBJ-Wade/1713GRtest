@@ -287,7 +287,8 @@ e1dot, e2dot = E1DOT.mean(), E2DOT.mean()
 edot_obs = e1dot*B_ref + e2dot*A_ref
 e_arr = e1 * B_ref + e2 * A_ref #e1 is the e*sin(omega) part and e2 is the e*cos(omege) part
 edot_GR = OMDOT_GR.mean() * np.cross(n_orb, e_arr)
-edot_diff = edot_obs - edot_GR
+#edot_diff = edot_obs - edot_GR
+edot_diff = 0.
 #edot = edot_obs - edot_GR
 #print 'edot_obs:', edot_obs, 'edot_GR:', edot_GR, 'edot_exc:', edot
 

@@ -291,7 +291,8 @@ M1 = PB/2/pi*(np.sqrt(Tsun*(M2*SINI)**3/a**3))-M2
 #print 'edot_obs:', edot_obs, 'edot_GR:', edot_GR, 'edot_exc:', edot
 
 #alpha_1 = 1.7e-5 # 0.4^{+3.7}_{-3.1}e-5
-alpha_1 = np.random.randn(SINI.size) * 1.7e-5 + 0.4e-5
+#alpha_1 = np.random.randn(SINI.size) * 1.7e-5 + 0.4e-5
+alpha_1 = np.zeros(SINI.size)
 
 Wr = np.linspace(-3000.e5, 3000.e5, num=100)
 X = []
@@ -317,7 +318,8 @@ ylabel(r'$v_r$ (cm/s)')
 show()
 
 print x.shape, y.shape
-np.savez('alpha3_alpha1', Wr=Wr, Alpha3=X)
+#np.savez('alpha3_alpha1', Wr=Wr, Alpha3=X)
+np.savez('alpha3_only', Wr=Wr, Alpha3=X)
 
 #alpha3 = calcalpha3(F0, a, PX, SINI, PAASCNODE, PMRA, PMDEC, M1, M2, PB, ECC, OM, E1DOT, E2DOT, 0)
 #hist(alpha3)
