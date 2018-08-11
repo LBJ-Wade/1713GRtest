@@ -84,6 +84,12 @@ def Kz(z):
 """Calculate the coordinate transfermation matrix"""
 T, GT = GetTransferMatrix(pf)#, paascnode)
 
+def McMillanAcc(L, B, d):
+    res = getoutput('./GalPotMcMillan2016/calcGalAcc.exe %s %s %s' % (L, B, d))
+    gx, gy, gz = res.split(' ')
+    return gx, gy, gz
+
+
 def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
     """calculate delta using e1dot and e2dot
     """
@@ -93,6 +99,9 @@ def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
     g_z = GT.I * Kz(z) * (np.matrix((0., 0., -1.)).T) 
     g = g_r + g_z
     g_NSEW = T * g
+    #print 'kr, Kz', kr, Kz(z)
+    #print 'g_r', g_r, 'g_z', g_z, 'g', g#, np.sqrt(sum(g**2))
+    print 'g_NSEW:', g_NSEW 
 
     incang = np.arcsin(sini)
     Omgang = paascnode/180.*np.pi
@@ -293,6 +302,10 @@ edot_diff = 0.
 #print 'edot_obs:', edot_obs, 'edot_GR:', edot_GR, 'edot_exc:', edot
 
 deltas = calcdelta(PX, a, SINI, PAASCNODE, M1, M2, PB, ECC, OM, E1DOT, E2DOT)
+
+
+sys.exit(0)
+
 hist(deltas, 30, normed=1, histtype='step')
 xlabel("$\Delta$")
 show()
