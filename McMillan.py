@@ -23,8 +23,8 @@ def McMillanPot(L, B, d):
 
 def McMillanAcc(L, B, d):
     res = getoutput('./GalPotMcMillan2016/calcGalAcc.exe %s %s %s' % (L, B, d))
-    gx, gy, gz = res.split(' ')
-    return gx, gy, gz
+    gR, gz = res.split(' ')
+    return gR,gz
 
 def SurfaceDensity(Mod, R):
     return float(getoutput('./GalPotMcMillan2016/surfacedensity.exe %s %s' % (Mod, R)))/1.e6 #Msun/pc^2, while the original unit is Msun/kpc^2

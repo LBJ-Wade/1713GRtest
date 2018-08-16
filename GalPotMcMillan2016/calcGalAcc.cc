@@ -111,5 +111,6 @@ int main(int argc,char *argv[])
     
     //cout << dPoP << "\n";
     //cout << (gx - gxsun) << " " << (gy - gysun) << " " << (gz - gzsun) << "\n";
-    cout << (gx ) << " " << (gy ) << " " << (gz ) << "\n";
+    //cout << (gx ) << " " << (gy ) << " " << (gz ) << "\n";
+    cout << -1. * gR << " " << -1.*gz << "\n";
 }

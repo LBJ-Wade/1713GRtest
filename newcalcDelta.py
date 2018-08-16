@@ -86,22 +86,43 @@ T, GT = GetTransferMatrix(pf)#, paascnode)
 
 def McMillanAcc(L, B, d):
     res = getoutput('./GalPotMcMillan2016/calcGalAcc.exe %s %s %s' % (L, B, d))
-    gx, gy, gz = res.split(' ')
-    return gx, gy, gz
+    gR, gz = res.split(' ')
+    return float(gR), float(gz)
 
 
-def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
+ra = RA(pf.RAJ[0])
+dec = Dec(pf.DECJ[0])
+pos = coord.SkyCoord(str(ra) +' '+ str(dec))
+l = pos.galactic.l.rad
+b = pos.galactic.b.rad
+L = pos.galactic.l.deg
+B = pos.galactic.b.deg
+
+Kr, Kz = McMillanAcc(L, B, D)
+print 'Kr, Kz', Kr, Kz
+#Pb = float(pf.PB[0] * secperday)
+#d = float(1/pf.PX[0])
+
+
+
+#def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
+def EdotF(kr, Kz, zeta, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
     """calculate delta using e1dot and e2dot
     """
     global edot_diff
 
+    #g_r = GT.I * kr * ( np.matrix((np.cos(0.-zeta),np.sin(0.-zeta),0)).T) #X/linalg.norm(X)
+    #g_z = GT.I * Kz(z) * (np.matrix((0., 0., -1.)).T) 
+    
+    #print zeta, Kr, Kz
     g_r = GT.I * kr * ( np.matrix((np.cos(0.-zeta),np.sin(0.-zeta),0)).T) #X/linalg.norm(X)
-    g_z = GT.I * Kz(z) * (np.matrix((0., 0., -1.)).T) 
+    g_z = GT.I * Kz * (np.matrix((0., 0., -1.)).T) 
     g = g_r + g_z
     g_NSEW = T * g
-    #print 'kr, Kz', kr, Kz(z)
+    #print 'kr, Kz', kr, Kz
     #print 'g_r', g_r, 'g_z', g_z, 'g', g#, np.sqrt(sum(g**2))
-    print 'g_NSEW:', g_NSEW 
+    #print 'g_NSEW:', g_NSEW 
+
 
     incang = np.arcsin(sini)
     Omgang = paascnode/180.*np.pi
@@ -125,6 +146,7 @@ def EdotF(kr, zeta, z, sini, paascnode, omdot_GR, e1, e2, e1dot, e2dot):
     #g_dir = g_proj/KG
     #g_ang = np.arccos(A_ref * g_dir)
     #g_norm = linalg.norm(g)
+    print 'g_x', linalg.norm(g_proj.T * A_ref), 'g_y', linalg.norm(g_proj.T * B_ref)
 
     g_frc = np.cross(g_proj, n_orb)
     g_frc_norm = linalg.norm(g_frc)
@@ -159,7 +181,7 @@ def calcdelta(PX, A1, SINI, PAASCNODE, M1, M2, PB, ECC, OM, E1DOT, E2DOT):
     #Omega_G = 27.2 #km s^-1 kpc^-1
     Omega_G = 30.57 #km s^-1 kpc^-1 +/- 5.1 Ref: Reid et al. 2014 (rmb+14)
     kpcinkm = 3.0857e16
-    Kr =  Omega_G**2 * R0**2 / R1 / kpcinkm * 1.e5 #Galactic acceleration in radio direction (cm/s^2)
+    #Kr =  Omega_G**2 * R0**2 / R1 / kpcinkm * 1.e5 #Galactic acceleration in radio direction (cm/s^2)
 
     OMDOT_GR = 3.*(2*np.pi/PB)**(5./3)*(Tsun*(M1+M2))**(2./3)/(1. - ECC**2)
     #print 'Galactic acceleration in radio direction in cm/s^2', Kr
@@ -168,7 +190,8 @@ def calcdelta(PX, A1, SINI, PAASCNODE, M1, M2, PB, ECC, OM, E1DOT, E2DOT):
     deltas = []
     for i,sini in enumerate(SINI):
         #print 'i, z[i]', i, z[i], gb, D[i]
-        edforce = EdotF(Kr[i], zeta[i], z[i], sini, PAASCNODE[i], OMDOT_GR[i], E1[i], E2[i], E1DOT[i], E2DOT[i])
+        #edforce = EdotF(Kr[i], zeta[i], z[i], sini, PAASCNODE[i], OMDOT_GR[i], E1[i], E2[i], E1DOT[i], E2DOT[i])
+        edforce = EdotF(Kr, Kz, zeta[i], sini, PAASCNODE[i], OMDOT_GR[i], E1[i], E2[i], E1DOT[i], E2DOT[i])
         deltas.append(edforce/fac[i])
         #THETA.append(theta)
         #KGarray.append(kg)
@@ -223,6 +246,12 @@ def PbToM2(pb): #based on different theoretical models in Tauris & Savonije 1999
     return np.random.uniform(M2s.min(), M2s.max())
     
 PB = getpar('PB')*secperday  #np.array([float(p[ipb])*secperday for p in MarkovChain])
+
+#here -->
+#d = 1./getpar('PX')
+
+#print 'plist:', plist
+#sys.exit(0)
 
 if 'M2' in plist:
     M2 = getpar('M2')
@@ -281,6 +310,8 @@ M1 = PB/2/pi*(np.sqrt(Tsun*(M2*SINI)**3/a**3))-M2
 #print 'EPS2DOT:', E2DOT.mean() , E2DOT.std()
 #print 'parfile:', vals0[plist.index('EPS2DOT')], errs0[plist.index('EPS2DOT')]
 
+
+
 OMDOT_GR = 3.*(2*np.pi/PB)**(5./3)*(Tsun*(M1+M2))**(2./3)/(1. - ECC**2)
 incang = np.arcsin(SINI.mean())
 Omgang = PAASCNODE.mean()/180.*np.pi
@@ -303,12 +334,11 @@ edot_diff = 0.
 
 deltas = calcdelta(PX, a, SINI, PAASCNODE, M1, M2, PB, ECC, OM, E1DOT, E2DOT)
 
+#sys.exit(0)
 
-sys.exit(0)
-
-hist(deltas, 30, normed=1, histtype='step')
-xlabel("$\Delta$")
-show()
+#hist(deltas, 30, normed=1, histtype='step')
+#xlabel("$\Delta$")
+#show()
 
 
 print deltas.shape
